@@ -39,3 +39,8 @@ app:
   cors:
     allowed-origins:
       - ${APP_CORS_ALLOWED_ORIGIN:http://localhost:4200}
+  auth:
+    token-secret: ${APP_AUTH_TOKEN_SECRET:local-auth-secret}
+    token-ttl-seconds: ${APP_AUTH_TOKEN_TTL_SECONDS:604800}
+  news:
+    bosnia-only: ${APP_NEWS_BOSNIA_ONLY:true}
