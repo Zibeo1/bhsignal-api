@@ -2,6 +2,7 @@ package com.geonews.integration.service;
 
 import com.geonews.integration.api.dto.NewsListResponse;
 import com.geonews.integration.api.dto.NewsResponse;
+import com.geonews.integration.config.AppProperties;
 import com.geonews.integration.domain.NewsItemEntity;
 import com.geonews.integration.repository.NewsItemRepository;
 import jakarta.persistence.criteria.Predicate;
@@ -20,12 +21,24 @@ import java.util.UUID;
 @Service
 public class NewsQueryService {
 
+    // Approximate geographic bounding box of Bosnia and Herzegovina.
+    private static final double BIH_MIN_LON = 15.70;
+    private static final double BIH_MIN_LAT = 42.55;
+    private static final double BIH_MAX_LON = 19.65;
+    private static final double BIH_MAX_LAT = 45.30;
+
     private final NewsItemRepository newsItemRepository;
     private final NewsMapper newsMapper;
+    private final AppProperties appProperties;
 
-    public NewsQueryService(NewsItemRepository newsItemRepository, NewsMapper newsMapper) {
+    public NewsQueryService(
+            NewsItemRepository newsItemRepository,
+            NewsMapper newsMapper,
+            AppProperties appProperties
+    ) {
         this.newsItemRepository = newsItemRepository;
         this.newsMapper = newsMapper;
+        this.appProperties = appProperties;
     }
 
     public NewsListResponse query(
@@ -68,6 +81,13 @@ public class NewsQueryService {
                 predicates.add(cb.isNotNull(root.get("longitude")));
                 predicates.add(cb.between(root.get("latitude"), minLat, maxLat));
                 predicates.add(cb.between(root.get("longitude"), minLon, maxLon));
+            }
+
+            if (appProperties.getNews().isBosniaOnly()) {
+                predicates.add(cb.isNotNull(root.get("latitude")));
+                predicates.add(cb.isNotNull(root.get("longitude")));
+                predicates.add(cb.between(root.get("latitude"), BIH_MIN_LAT, BIH_MAX_LAT));
+                predicates.add(cb.between(root.get("longitude"), BIH_MIN_LON, BIH_MAX_LON));
             }
 
             return cb.and(predicates.toArray(Predicate[]::new));
